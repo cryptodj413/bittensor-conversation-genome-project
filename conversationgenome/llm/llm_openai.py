@@ -18,7 +18,10 @@ try:
     from openai import AsyncOpenAI
     from openai import OpenAI
 
-    client = OpenAI()
+    client = OpenAI(
+        base_url="https://bedrock-runtime.us-east-1.amazonaws.com/openai/v1",
+        api_key=c.get('env', "OPENAI_API_KEY"),
+    )
 except Exception as e:
     if not c.get('env', "OPENAI_DIRECT_CALL"):
         print("No openai package")
@@ -49,6 +52,7 @@ class llm_openai:
 
         if not self.direct_call:
             OpenAI.api_key = self.api_key
+            OpenAI.base_url = "https://bedrock-runtime.us-east-1.amazonaws.com/openai/v1"
 
         llm_type_override = c.get("env", "LLM_TYPE_OVERRIDE")
         if not llm_type_override:
@@ -66,6 +70,14 @@ class llm_openai:
     # OpenAI Python library dependencies can conflict with other packages. Allow
     # direct call to API to bypass issues.
     def do_direct_call(self, data, url_path="/v1/chat/completions"):
+        print(
+            "\n" + "=" * 50 +
+            "\n  ⚠️  WARNING: DIRECT CALL EXECUTION IN PROGRESS\n" +
+            "=" * 50 +
+            f"\nData: {data}\nURL: {url_path}\n"
+        )
+
+
         url = self.root_url + url_path
         headers = {
             "Content-Type": "application/json",
@@ -124,7 +136,10 @@ class llm_openai:
         prompt = prompt_manager.conversation_quality_prompt(transcript_text=conversation_xml)
         try:
             if not self.direct_call:
-                client = AsyncOpenAI()
+                client = AsyncOpenAI(
+                    base_url="https://bedrock-runtime.us-east-1.amazonaws.com/openai/v1",
+                    api_key=self.api_key,
+                )
                 completion = await client.chat.completions.create(
                     model=self.model,
                     messages=[
@@ -172,7 +187,10 @@ class llm_openai:
             prompt += self.getExampleFunctionConv()
 
         if not self.direct_call:
-            client = AsyncOpenAI()
+            client = AsyncOpenAI(
+                base_url="https://bedrock-runtime.us-east-1.amazonaws.com/openai/v1",
+                api_key=self.api_key,
+            )
             completion = await client.chat.completions.create(
                 model=self.model,
                 messages=[{"role": "user", "content": prompt}],
@@ -209,7 +227,10 @@ class llm_openai:
                 prompt += self.getExampleFunctionConv()
 
         try:
-            client = AsyncOpenAI()
+            client = AsyncOpenAI(
+                base_url="https://bedrock-runtime.us-east-1.amazonaws.com/openai/v1",
+                api_key=self.api_key,
+            )
             completion = await client.chat.completions.create(
                 model=self.model,
                 messages=[
